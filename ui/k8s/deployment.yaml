@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ci-testgrid-ui
+  labels:
+    app: ci-testgrid-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ci-testgrid-ui
+  template:
+    metadata:
+      labels:
+        app: ci-testgrid-ui
+    spec:
+      containers:
+      - name: ci-testgrid-ui
+        image: quay.io/hypershift/ci-testgrid-ui:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGODB_URI
+          value: mongodb://mongodb:27017
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ci-testgrid-ui-service
+spec:
+  selector:
+    app: ci-testgrid-ui
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: testgrid
+  labels:
+    app: testgrid
+spec:
+  to:
+    kind: Service
+    name: ci-testgrid-ui-service
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge 

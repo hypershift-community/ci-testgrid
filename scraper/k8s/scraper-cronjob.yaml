@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cijobs-scraper
+spec:
+  schedule: "*/5 * * * *"  # Run every 5 minutes
+  concurrencyPolicy: Forbid  # Don't run new jobs if previous one is still running
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cijobs-scraper
+            image: quay.io/hypershift/ci-scraper:latest
+            imagePullPolicy: Always
+            env:
+            - name: MONGODB_HOST
+              value: "mongodb"
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "256Mi"
+          restartPolicy: OnFailure 

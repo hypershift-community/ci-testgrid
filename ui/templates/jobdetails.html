@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PR #{{.Job.PR}} - {{formatTime .Job.StartedAt}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .job-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .job-title {
+            font-size: 24px;
+            margin: 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .job-title a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .job-title a:hover {
+            text-decoration: underline;
+        }
+        .github-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+        .job-meta {
+            color: #666;
+            font-size: 14px;
+        }
+        .job-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status-success { background-color: #4CAF50; color: white; }
+        .status-failure { background-color: #f44336; color: white; }
+        .status-unknown { background-color: #9e9e9e; color: white; }
+        
+        .summary {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .summary h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .failures {
+            margin-top: 30px;
+        }
+        .failures h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .failure-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .failure-header {
+            background-color: #f8f8f8;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .failure-header:hover {
+            background-color: #f0f0f0;
+        }
+        .failure-name {
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .failure-duration {
+            color: #666;
+            font-size: 12px;
+        }
+        .failure-logs {
+            padding: 15px;
+            background-color: #f8f8f8;
+            font-family: monospace;
+            white-space: pre;
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: auto;
+            line-height: 1;
+            font-size: 12px;
+            display: none;
+        }
+        .failure-logs.expanded {
+            display: block;
+        }
+        .back-link {
+            color: #1976d2;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .expand-icon {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.2s;
+        }
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="job-info">
+            <h1 class="job-title">
+                <a href="https://github.com/openshift/hypershift/pull/{{.Job.PR}}" target="_blank">
+                    <svg class="github-icon" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    PR #{{.Job.PR}} - {{formatTime .Job.StartedAt}}
+                </a>
+            </h1>
+            <div class="job-meta">
+                Job: {{.Job.Name}}
+            </div>
+        </div>
+        <div class="job-status status-{{.Job.Result}}">
+            {{.Job.Result}}
+        </div>
+    </div>
+
+    <a href="/" class="back-link">← Back to Test Grid</a>
+
+    <div class="summary">
+        <h2>Test Summary</h2>
+        <div class="summary-stats">
+            <div class="stat-item">
+                <div class="stat-value">{{.Summary.Total}}</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color: #4CAF50">{{.Summary.Passed}}</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color: #f44336">{{.Summary.Failed}}</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color: #ff9800">{{.Summary.Skipped}}</div>
+                <div class="stat-label">Skipped</div>
+            </div>
+        </div>
+    </div>
+
+    {{if .Summary.Failed}}
+    <div class="failures">
+        <h2>Failed Tests</h2>
+        {{range .FailedTests}}
+        <div class="failure-item">
+            <div class="failure-header" onclick="toggleFailure(this)">
+                <div class="failure-name">
+                    <svg class="expand-icon {{if eq .Name $.ExpandTest}}expanded{{end}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                    {{.Name}}
+                </div>
+                <span class="failure-duration">{{.Duration}}</span>
+            </div>
+            <div class="failure-logs {{if eq .Name $.ExpandTest}}expanded{{end}}">
+                {{range .Logs}}
+                {{.}}
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+
+    <script>
+        function toggleFailure(header) {
+            const logs = header.nextElementSibling;
+            const icon = header.querySelector('.expand-icon');
+            logs.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html> 
