@@ -42,7 +42,7 @@ type Build struct {
 	Refs         Refs   `json:"Refs"`
 }
 
-func ScrapeJobs(url string) ([]types.Job, string, error) {
+func ScrapeJobs(url, suffix string) ([]types.Job, string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, "", err
@@ -80,7 +80,7 @@ func ScrapeJobs(url string) ([]types.Job, string, error) {
 		if build.Result != "SUCCESS" && build.Result != "FAILURE" {
 			continue
 		}
-		logURL, err := spyglassToLogURL(build.SpyglassLink)
+		logURL, err := spyglassToLogURL(build.SpyglassLink, suffix)
 		if err != nil {
 			logURL = ""
 		}
@@ -103,11 +103,10 @@ func ScrapeJobs(url string) ([]types.Job, string, error) {
 	return jobs, getOlderRunsURL(doc), nil
 }
 
-func spyglassToLogURL(spyglassLink string) (string, error) {
+func spyglassToLogURL(spyglassLink, suffix string) (string, error) {
 	const (
 		prefix       = "/view/gs/"
 		gcswebPrefix = "https://gcsweb-ci.apps.ci.l2s4.p1.openshiftapps.com/gcs/"
-		suffix       = "/artifacts/e2e-aws/hypershift-aws-run-e2e-external/build-log.txt"
 	)
 
 	if !strings.HasPrefix(spyglassLink, prefix) {

@@ -12,6 +12,7 @@ type Job struct {
 	PR        int    `json:"pr" bson:"pr"`
 	Tests     []Test `json:"tests" bson:"tests"`
 	JobLink   string `json:"job_link" bson:"job_link"`
+	TestName  string `json:"test_name" bson:"test_name"`
 }
 
 type Test struct {
