@@ -27,6 +27,7 @@ type Job struct {
 	PR        int    `json:"pr" bson:"pr"`
 	Tests     []Test `json:"tests" bson:"tests"`
 	JobLink   string `json:"job_link" bson:"job_link"`
+	TestName  string `json:"test_name" bson:"test_name"`
 }
 
 // Test represents individual test details
@@ -41,10 +42,12 @@ type Test struct {
 
 // TestGridViewModel represents the data for the test grid view
 type TestGridViewModel struct {
-	Jobs       []Job
-	TestGroups []string
-	FilterPR   int  // The PR number being filtered on, if any
-	Filtered   bool // Whether we're currently filtering
+	Jobs           []Job
+	TestGroups     []string
+	FilterPR       int    // The PR number being filtered on, if any
+	FilterTestName string // The test name being viewed
+	Filtered       bool   // Whether we're currently filtering
+	Title          string // The title to display for the grid
 }
 
 // TestResultInfo contains additional test result information
@@ -87,7 +90,7 @@ func NewHandler(templateFS embed.FS) (*Handler, error) {
 		"getTestResultInfo": getTestResultInfo,
 		"formatTime":        formatTime,
 		"getJobStatusColor": getJobStatusColor,
-	}).ParseFS(templateFS, "templates/testgrid.html", "templates/jobdetails.html")
+	}).ParseFS(templateFS, "templates/testgrid.html", "templates/jobdetails.html", "templates/testnames.html")
 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
@@ -114,29 +117,36 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) handleTestGrid(w http.ResponseWriter, r *http.Request) {
 	// Parse PR filter from query parameters
 	var filterPR int
+	var filterTestName string
 	var filtered bool
+	if testName := r.URL.Query().Get("testName"); testName != "" {
+		filterTestName = testName
+		filtered = true
+	}
+
+	// If no testName is specified, show the test name selection page
+	if !filtered {
+		err := h.templates.ExecuteTemplate(w, "testnames.html", nil)
+		if err != nil {
+			log.Printf("Template execution error: %v", err)
+			http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+
+	// Only parse PR filter if we have a testName
 	if prStr := r.URL.Query().Get("pr"); prStr != "" {
 		if pr, err := fmt.Sscanf(prStr, "%d", &filterPR); err == nil && pr == 1 {
 			filtered = true
 		}
 	}
 
-	// Fetch jobs from MongoDB
-	jobs, err := fetchJobsFromMongoDB()
+	// Fetch jobs from MongoDB filtered by testName and PR
+	jobs, err := fetchJobsFromMongoDB(filterTestName, filterPR)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error fetching jobs: %v", err), http.StatusInternalServerError)
 		return
-	}
-
-	// Filter jobs by PR if specified
-	if filtered {
-		var filteredJobs []Job
-		for _, job := range jobs {
-			if job.PR == filterPR {
-				filteredJobs = append(filteredJobs, job)
-			}
-		}
-		jobs = filteredJobs
 	}
 
 	// Sort jobs by StartedAt timestamp
@@ -148,10 +158,12 @@ func (h *Handler) handleTestGrid(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare view model
 	viewModel := TestGridViewModel{
-		Jobs:       jobs,
-		TestGroups: extractTestGroups(jobs),
-		FilterPR:   filterPR,
-		Filtered:   filtered,
+		Jobs:           jobs,
+		TestGroups:     extractTestGroups(jobs),
+		FilterPR:       filterPR,
+		FilterTestName: filterTestName,
+		Filtered:       filtered,
+		Title:          fmt.Sprintf("TestGrid: %s", filterTestName),
 	}
 
 	// Execute template
@@ -258,7 +270,7 @@ func calculateTestSummary(tests []Test) TestSummary {
 }
 
 // fetchJobsFromMongoDB retrieves jobs from MongoDB
-func fetchJobsFromMongoDB() ([]Job, error) {
+func fetchJobsFromMongoDB(testName string, pr int) ([]Job, error) {
 	// MongoDB connection configuration
 	clientOptions := options.Client().ApplyURI(getMongoDBURI())
 	client, err := mongo.Connect(context.TODO(), clientOptions)
@@ -270,12 +282,21 @@ func fetchJobsFromMongoDB() ([]Job, error) {
 	// Select database and collection
 	collection := client.Database("ci").Collection("jobs")
 
-	// Fetch jobs (last 7 days)
-	cursor, err := collection.Find(context.TODO(), bson.M{
+	// Build query filter
+	filter := bson.M{
 		"started_at": bson.M{
 			"$gte": time.Now().AddDate(0, 0, -7).Format(time.RFC3339),
 		},
-	})
+		"test_name": testName,
+	}
+
+	// Add PR filter if specified
+	if pr > 0 {
+		filter["pr"] = pr
+	}
+
+	// Fetch jobs (last 7 days)
+	cursor, err := collection.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}

@@ -167,10 +167,16 @@
 </head>
 <body>
     <div class="header">
-        <h1>TestGrid: HyperShift e2e-aws presubmit</h1>
+        <h1>{{.Title}}</h1>
         {{if .Filtered}}
             <div class="filter-info">
-                Showing results for PR #{{.FilterPR}}
+                {{if .FilterPR}}
+                    Showing results for PR #{{.FilterPR}}
+                {{end}}
+                {{if .FilterTestName}}
+                    {{if .FilterPR}} and {{end}}
+                    Test: {{.FilterTestName}}
+                {{end}}
                 <a href="/">Clear filter</a>
             </div>
         {{end}}
@@ -186,12 +192,12 @@
                     <th>
                         <div class="job-header {{getJobStatusColor .}}">
                             <div class="job-time">
-                                <a href="?job={{.ID}}" target="_blank">
+                                <a href="?job={{.ID}}&testName={{$.FilterTestName}}" target="_blank">
                                     {{formatTime .StartedAt}}
                                 </a>
                             </div>
                             <div class="job-pr">
-                                <a href="?pr={{.PR}}">PR #{{.PR}}</a>
+                                <a href="?testName={{$.FilterTestName}}&pr={{.PR}}">PR #{{.PR}}</a>
                             </div>
                         </div>
                     </th>
