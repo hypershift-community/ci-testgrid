@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cijobs-reporter
+spec:
+  schedule: "*/5 * * * *"  # Run every 5 minutes
+  concurrencyPolicy: Forbid  # Don't run new jobs if previous one is still running
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cijobs-reporter
+            image: quay.io/hypershift/ci-reporter:latest
+            imagePullPolicy: Always
+            env:
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017"
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: token
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "256Mi"
+          restartPolicy: OnFailure 
