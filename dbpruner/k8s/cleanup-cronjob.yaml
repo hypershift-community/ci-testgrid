@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: testgrid-dbpruner
+spec:
+  # Run daily at 2 AM UTC
+  schedule: "0 2 * * *"
+  timeZone: "UTC"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: testgrid-dbpruner
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: dbpruner
+            image: quay.io/hypershift/ci-testgrid-dbpruner:latest
+            imagePullPolicy: Always
+            command:
+            - /app/dbpruner
+            args:
+            - --retention-days=30
+            - --batch-size=1000
+            env:
+            - name: MONGODB_HOST
+              value: "mongodb"
+            - name: MONGODB_URI
+              value: "mongodb://mongodb:27017"
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+            livenessProbe:
+              exec:
+                command:
+                - /bin/sh
+                - -c
+                - "ps aux | grep '[d]bpruner' || exit 1"
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 3
