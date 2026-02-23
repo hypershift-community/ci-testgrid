@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
           - name: cijobs-scraper
-            image: quay.io/hypershift/ci-scraper:latest
+            image: quay.io/hypershift/ci-scraper:2026-02-23
             imagePullPolicy: Always
             env:
             - name: MONGODB_HOST

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: ci-testgrid-ui
-        image: quay.io/hypershift/ci-testgrid-ui:latest
+        image: quay.io/hypershift/ci-testgrid-ui:2026-02-23
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

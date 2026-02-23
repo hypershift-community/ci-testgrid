@@ -1,13 +1,8 @@
 # Build stage - using public UBI image (no auth required)
-FROM registry.access.redhat.com/ubi8/go-toolset:1.21 AS builder
-
-# Switch to root to install packages and set up build environment
-USER root
-
-# Install git (needed for go modules)
-RUN dnf update -y && dnf install -y git && dnf clean all
+FROM registry.access.redhat.com/ubi9/go-toolset:latest AS builder
 
 # Set working directory
+USER root
 WORKDIR /build
 
 # Copy go mod files
@@ -25,7 +20,7 @@ COPY types/ ./types/
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o dbpruner main.go
 
 # Final stage - minimal runtime image (public access)
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.7
 
 # Add Red Hat container labels
 LABEL name="ci-testgrid-dbpruner" \

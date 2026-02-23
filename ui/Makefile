@@ -1,7 +1,9 @@
 # Binary name
 BINARY_NAME=ci-testgrid-ui
 CONTAINER_ENGINE ?= podman
-IMAGE_NAME=quay.io/hypershift/ci-testgrid-ui:latest
+IMAGE_TAG ?= $(shell date +%Y-%m-%d)
+IMAGE_NAME=quay.io/hypershift/ci-testgrid-ui:$(IMAGE_TAG)
+AUTHFILE ?= $(HOME)/.hypershift-push
 
 # Go commands
 GOCMD=go
@@ -42,4 +44,7 @@ run: build
 image:
 	${CONTAINER_ENGINE} build --arch=amd64 --os=linux -t ${IMAGE_NAME} .
 
-.PHONY: all build test clean deps run image
+push: image
+	${CONTAINER_ENGINE} push --authfile ${AUTHFILE} ${IMAGE_NAME}
+
+.PHONY: all build test clean deps run image push

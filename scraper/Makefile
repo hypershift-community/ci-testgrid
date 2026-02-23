@@ -1,6 +1,8 @@
 BINARY_NAME=bin/ci-scraper
 CONTAINER_ENGINE ?= podman
-IMAGE_NAME=quay.io/hypershift/ci-scraper:latest
+IMAGE_TAG ?= $(shell date +%Y-%m-%d)
+IMAGE_NAME=quay.io/hypershift/ci-scraper:$(IMAGE_TAG)
+AUTHFILE ?= $(HOME)/.hypershift-push
 
 build:
 	go build -o ${BINARY_NAME} main.go
@@ -17,4 +19,7 @@ clean:
 
 image:
 	${CONTAINER_ENGINE} build --arch=amd64 --os=linux -t ${IMAGE_NAME} .
+
+push: image
+	${CONTAINER_ENGINE} push --authfile ${AUTHFILE} ${IMAGE_NAME}
 
