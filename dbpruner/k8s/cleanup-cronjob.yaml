@@ -19,7 +19,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: dbpruner
-            image: quay.io/hypershift/ci-testgrid-dbpruner:latest
+            image: quay.io/hypershift/ci-testgrid-dbpruner:2026-02-23
             imagePullPolicy: Always
             command:
             - /app/dbpruner

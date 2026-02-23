@@ -3,9 +3,11 @@
 
 # Container engine (podman preferred for Red Hat ecosystem)
 CONTAINER_ENGINE ?= podman
-IMAGE_NAME ?= quay.io/hypershift/ci-testgrid-dbpruner:latest
+IMAGE_TAG ?= $(shell date +%Y-%m-%d)
+IMAGE_NAME ?= quay.io/hypershift/ci-testgrid-dbpruner:$(IMAGE_TAG)
+AUTHFILE ?= $(HOME)/.hypershift-push
 
-.PHONY: build clean run help deps image
+.PHONY: build clean run help deps image push
 
 # Build the dbpruner binary
 build:
@@ -27,6 +29,9 @@ run:
 # Container image targets
 image:
 	$(CONTAINER_ENGINE) build --arch=amd64 --os=linux -t $(IMAGE_NAME) .
+
+push: image
+	$(CONTAINER_ENGINE) push --authfile $(AUTHFILE) $(IMAGE_NAME)
 
 
 

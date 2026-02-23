@@ -15,6 +15,8 @@ metadata:
   name: mongodb
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mongodb
@@ -25,7 +27,7 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: docker.io/library/mongo:latest
+        image: quay.io/mongodb/mongodb-community-server:8.2.5-ubi9
         ports:
         - containerPort: 27017
         volumeMounts:
