@@ -20,7 +20,16 @@ func ProcessJob(job *types.Job) ([]types.Test, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	return parseLog(resp.Body)
+
+	tests, err := parseLog(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch artifacts for each test
+	fetchArtifacts(job.LogURL, tests)
+
+	return tests, nil
 }
 
 // TestEntry holds a test’s name, its result (pass, fail or skip),

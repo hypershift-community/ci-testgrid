@@ -20,6 +20,6 @@ type Test struct {
 	Result        string        `json:"result" bson:"result"`
 	Duration      time.Duration `json:"duration" bson:"duration"`
 	Logs          []string      `json:"logs" bson:"logs"`
-	HostedCluster any           `json:"hosted_cluster" bson:"hosted_cluster"`
-	NodePools     any           `json:"nodepools" bson:"nodepools"`
+	HostedCluster string   `json:"hosted_cluster" bson:"hosted_cluster"`
+	NodePools     []string `json:"nodepools" bson:"nodepools"`
 }
