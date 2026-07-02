@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -26,8 +27,9 @@ func ProcessJob(job *types.Job) ([]types.Test, error) {
 		return nil, err
 	}
 
-	// Fetch artifacts for each test
-	fetchArtifacts(job.LogURL, tests)
+	if os.Getenv("SKIP_ARTIFACTS") == "" {
+		fetchArtifacts(job.LogURL, tests)
+	}
 
 	return tests, nil
 }

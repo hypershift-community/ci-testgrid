@@ -16,6 +16,8 @@ spec:
             env:
             - name: MONGODB_HOST
               value: "mongodb"
+            - name: SKIP_ARTIFACTS
+              value: "1"
             resources:
               requests:
                 cpu: "100m"
