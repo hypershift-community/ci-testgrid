@@ -110,7 +110,7 @@ func createRootCommand() *cobra.Command {
 			// Create e2e-aws scraper
 			awsScraper := NewScraper(
 				"https://prow.ci.openshift.org/job-history/gs/test-platform-results/pr-logs/directory/pull-ci-openshift-hypershift-main-e2e-aws",
-				"/artifacts/e2e-aws/hypershift-aws-run-e2e-external/build-log.txt",
+				"/artifacts/e2e-aws/hypershift-aws-run-e2e-nested/build-log.txt",
 				"e2e-aws",
 			)
 
